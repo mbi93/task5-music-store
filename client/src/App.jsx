@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "./services/api";
 
 import SongTable from "./components/SongTable";
@@ -10,10 +10,13 @@ function App() {
   const [seed, setSeed] = useState(1);
   const [likes, setLikes] = useState(3.7);
   const [locale, setLocale] = useState("en-US");
+
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
 
   const [view, setView] = useState("table");
+
+  const requestIdRef = useRef(0);
 
   const buttonStyle = {
     padding: "10px 16px",
@@ -22,7 +25,6 @@ function App() {
     color: "white",
     cursor: "pointer",
     fontWeight: "600",
-    transition: "0.2s",
   };
 
   const inputStyle = {
@@ -51,40 +53,55 @@ function App() {
   useEffect(() => {
     setSongs([]);
     setPage(1);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }, [view]);
 
   useEffect(() => {
-    loadSongs();
-  }, [page, seed, likes, locale]);
+    const loadSongs = async () => {
+      const requestId = ++requestIdRef.current;
 
-  async function loadSongs() {
-    try {
-      setIsLoading(true);
+      try {
+        setIsLoading(true);
 
-      const response = await api.get("/songs", {
-        params: {
-          page,
-          seed,
-          likes,
-          locale,
-        },
-      });
+        const response = await api.get("/songs", {
+          params: {
+            page,
+            seed,
+            likes,
+            locale,
+          },
+        });
 
-      if (view === "gallery") {
-        if (page === 1) {
-          setSongs(response.data.items);
-        } else {
-          setSongs((prev) => [...prev, ...response.data.items]);
+        if (requestId !== requestIdRef.current) {
+          return;
         }
-      } else {
-        setSongs(response.data.items);
+
+        const items = response.data.items;
+
+        if (view === "gallery") {
+          if (page === 1) {
+            setSongs(items);
+          } else {
+            setSongs((prev) => [...prev, ...items]);
+          }
+        } else {
+          setSongs(items);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (requestId === requestIdRef.current) {
+          setIsLoading(false);
+        }
       }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+    };
+
+    loadSongs();
+  }, [page, seed, likes, locale, view]);
 
   return (
     <div
@@ -105,7 +122,7 @@ function App() {
       <div
         style={{
           position: "sticky",
-          top: "0",
+          top: 0,
           zIndex: 1000,
 
           display: "flex",
@@ -136,8 +153,7 @@ function App() {
           style={inputStyle}
           type="number"
           value={seed}
-          onChange={(e) => setSeed(e.target.value)}
-          placeholder="Seed"
+          onChange={(e) => setSeed(Number(e.target.value))}
         />
 
         <input
@@ -147,8 +163,7 @@ function App() {
           min="0"
           max="10"
           value={likes}
-          onChange={(e) => setLikes(e.target.value)}
-          placeholder="Likes"
+          onChange={(e) => setLikes(Number(e.target.value))}
         />
 
         <button
@@ -156,7 +171,9 @@ function App() {
             ...buttonStyle,
             background: "#2563eb",
           }}
-          onClick={() => setSeed(Math.floor(Math.random() * 1000000))}
+          onClick={() =>
+            setSeed(Math.floor(Math.random() * 1000000))
+          }
         >
           Random Seed
         </button>
@@ -164,7 +181,10 @@ function App() {
         <button
           style={{
             ...buttonStyle,
-            background: view === "table" ? "#2563eb" : "#94a3b8",
+            background:
+              view === "table"
+                ? "#2563eb"
+                : "#94a3b8",
           }}
           onClick={() => {
             if (view === "table") return;
@@ -177,7 +197,10 @@ function App() {
         <button
           style={{
             ...buttonStyle,
-            background: view === "gallery" ? "#2563eb" : "#94a3b8",
+            background:
+              view === "gallery"
+                ? "#2563eb"
+                : "#94a3b8",
           }}
           onClick={() => {
             if (view === "gallery") return;
@@ -189,9 +212,17 @@ function App() {
       </div>
 
       {view === "table" ? (
-        <SongTable songs={songs} page={page} setPage={setPage} />
+        <SongTable
+          songs={songs}
+          page={page}
+          setPage={setPage}
+        />
       ) : (
-        <SongGallery songs={songs} loadMore={loadMore} isLoading={isLoading} />
+        <SongGallery
+          songs={songs}
+          loadMore={loadMore}
+          isLoading={isLoading}
+        />
       )}
     </div>
   );

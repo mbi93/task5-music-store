@@ -1,19 +1,48 @@
 import { useInView } from "react-intersection-observer";
 import { useEffect, useRef, useState } from "react";
-import { playPreview, stopPreview } from "../utils/audioGenerator";
+import {
+  playPreview,
+  stopPreview,
+} from "../utils/audioGenerator";
 
-export default function SongGallery({ songs, loadMore, isLoading }) {
-  const { ref, inView } = useInView();
-
+export default function SongGallery({
+  songs,
+  loadMore,
+  isLoading,
+}) {
   const [playingId, setPlayingId] = useState(null);
 
+  const { ref, inView } = useInView({
+    threshold: 0,
+    rootMargin: "300px",
+  });
+
+  const initializedRef = useRef(false);
+  const loadingRef = useRef(false);
+
   useEffect(() => {
+    if (songs.length > 0) {
+      initializedRef.current = true;
+    }
+  }, [songs.length]);
+
+  useEffect(() => {
+    if (!initializedRef.current) return;
+
     if (!inView) return;
 
-    if (isLoading) return;
+    if (loadingRef.current) return;
+
+    loadingRef.current = true;
 
     loadMore();
-  }, [inView, isLoading, loadMore]);
+  }, [inView]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      loadingRef.current = false;
+    }
+  }, [isLoading]);
 
   return (
     <>
@@ -33,7 +62,6 @@ export default function SongGallery({ songs, loadMore, isLoading }) {
               overflow: "hidden",
               background: "#fff",
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              transition: "0.2s",
             }}
           >
             <img
@@ -55,21 +83,12 @@ export default function SongGallery({ songs, loadMore, isLoading }) {
                 height: "250px",
               }}
             >
-              <h3
-                style={{
-                  marginTop: 0,
-                  marginBottom: "10px",
-                }}
-              >
-                #{song.index}
-              </h3>
+              <h3>#{song.index}</h3>
 
               <p
                 title={song.title}
                 style={{
                   fontWeight: "600",
-                  marginBottom: "8px",
-
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -82,8 +101,6 @@ export default function SongGallery({ songs, loadMore, isLoading }) {
                 title={song.artist}
                 style={{
                   color: "#475569",
-                  marginBottom: "12px",
-
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -103,6 +120,7 @@ export default function SongGallery({ songs, loadMore, isLoading }) {
               <p>
                 <strong>❤️ Likes:</strong> {song.likes}
               </p>
+
               <button
                 onClick={() => {
                   if (playingId === song.id) {
@@ -113,7 +131,9 @@ export default function SongGallery({ songs, loadMore, isLoading }) {
 
                   stopPreview();
 
-                  playPreview(`${song.id}-${song.title}-${song.artist}`);
+                  playPreview(
+                    `${song.id}-${song.title}-${song.artist}`
+                  );
 
                   setPlayingId(song.id);
                 }}
@@ -123,13 +143,17 @@ export default function SongGallery({ songs, loadMore, isLoading }) {
                   padding: "10px",
                   border: "none",
                   borderRadius: "8px",
-                  background: playingId === song.id ? "#dc2626" : "#2563eb",
+                  background:
+                    playingId === song.id
+                      ? "#dc2626"
+                      : "#2563eb",
                   color: "white",
                   cursor: "pointer",
-                  fontWeight: "600",
                 }}
               >
-                {playingId === song.id ? "⏸ Pause" : "🎵 Preview"}
+                {playingId === song.id
+                  ? "⏸ Pause"
+                  : "🎵 Preview"}
               </button>
             </div>
           </div>
@@ -139,7 +163,7 @@ export default function SongGallery({ songs, loadMore, isLoading }) {
       <div
         ref={ref}
         style={{
-          height: "50px",
+          height: "80px",
           marginTop: "20px",
         }}
       />
