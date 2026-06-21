@@ -2,22 +2,18 @@ import { useInView } from "react-intersection-observer";
 import { useEffect, useRef, useState } from "react";
 import { playPreview, stopPreview } from "../utils/audioGenerator";
 
-export default function SongGallery({ songs, loadMore }) {
+export default function SongGallery({ songs, loadMore, isLoading }) {
   const { ref, inView } = useInView();
 
-  const firstRender = useRef(true);
   const [playingId, setPlayingId] = useState(null);
 
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
-      return;
-    }
+    if (!inView) return;
 
-    if (inView) {
-      loadMore();
-    }
-  }, [inView, loadMore]);
+    if (isLoading) return;
+
+    loadMore();
+  }, [inView, isLoading, loadMore]);
 
   return (
     <>
