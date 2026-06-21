@@ -47,8 +47,13 @@ function App() {
   }, [seed, likes, locale]);
 
   useEffect(() => {
+    setSongs([]);
+    setPage(1);
+  }, [view]);
+
+  useEffect(() => {
     loadSongs();
-  }, [page, seed, likes, locale, view]);
+  }, [page, seed, likes, locale]);
 
   async function loadSongs() {
     try {
@@ -65,7 +70,10 @@ function App() {
         if (page === 1) {
           setSongs(response.data.items);
         } else {
-          setSongs((prev) => [...prev, ...response.data.items]);
+          setSongs((prev) => [
+            ...prev,
+            ...response.data.items,
+          ]);
         }
       } else {
         setSongs(response.data.items);
@@ -109,23 +117,32 @@ function App() {
           border: "1px solid #e2e8f0",
           borderRadius: "12px",
 
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+          boxShadow:
+            "0 2px 10px rgba(0,0,0,0.08)",
         }}
       >
         <select
           value={locale}
-          onChange={(e) => setLocale(e.target.value)}
+          onChange={(e) =>
+            setLocale(e.target.value)
+          }
           style={inputStyle}
         >
-          <option value="en-US">English (US)</option>
-          <option value="de-DE">German (DE)</option>
+          <option value="en-US">
+            English (US)
+          </option>
+          <option value="de-DE">
+            German (DE)
+          </option>
         </select>
 
         <input
           style={inputStyle}
           type="number"
           value={seed}
-          onChange={(e) => setSeed(e.target.value)}
+          onChange={(e) =>
+            setSeed(e.target.value)
+          }
           placeholder="Seed"
         />
 
@@ -136,7 +153,9 @@ function App() {
           min="0"
           max="10"
           value={likes}
-          onChange={(e) => setLikes(e.target.value)}
+          onChange={(e) =>
+            setLikes(e.target.value)
+          }
           placeholder="Likes"
         />
 
@@ -145,7 +164,13 @@ function App() {
             ...buttonStyle,
             background: "#2563eb",
           }}
-          onClick={() => setSeed(Math.floor(Math.random() * 1000000))}
+          onClick={() =>
+            setSeed(
+              Math.floor(
+                Math.random() * 1000000
+              )
+            )
+          }
         >
           Random Seed
         </button>
@@ -153,13 +178,13 @@ function App() {
         <button
           style={{
             ...buttonStyle,
-            background: view === "table" ? "#2563eb" : "#94a3b8",
+            background:
+              view === "table"
+                ? "#2563eb"
+                : "#94a3b8",
           }}
           onClick={() => {
             if (view === "table") return;
-
-            setSongs([]);
-            setPage(1);
             setView("table");
           }}
         >
@@ -169,13 +194,13 @@ function App() {
         <button
           style={{
             ...buttonStyle,
-            background: view === "gallery" ? "#2563eb" : "#94a3b8",
+            background:
+              view === "gallery"
+                ? "#2563eb"
+                : "#94a3b8",
           }}
           onClick={() => {
             if (view === "gallery") return;
-
-            setSongs([]);
-            setPage(1);
             setView("gallery");
           }}
         >
@@ -184,9 +209,16 @@ function App() {
       </div>
 
       {view === "table" ? (
-        <SongTable songs={songs} page={page} setPage={setPage} />
+        <SongTable
+          songs={songs}
+          page={page}
+          setPage={setPage}
+        />
       ) : (
-        <SongGallery songs={songs} loadMore={loadMore} />
+        <SongGallery
+          songs={songs}
+          loadMore={loadMore}
+        />
       )}
     </div>
   );
